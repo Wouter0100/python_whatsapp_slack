@@ -1,0 +1,3 @@
+slackclient
+git+https://github.com/fnjeneza/yowsup.git#egg=yowsup
+PyYAML
