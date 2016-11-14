@@ -3,7 +3,7 @@ from threading import Thread
 
 import time
 import yaml
-from _yaml import ScannerError
+from yaml.scanner import ScannerError
 
 from yowsup.layers import YowLayerEvent
 from yowsup.layers.auth import AuthError
