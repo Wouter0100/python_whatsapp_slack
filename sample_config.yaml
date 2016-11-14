@@ -7,8 +7,8 @@ config:
 
 channels:
   key: #just a random name or so, repeat this for every channel it's active in
-    whatsapp: '31619069773-1478769400@g.us' #id of the whatsapp group/chat
-    slack: 'G2Z6GHHEH' #id of the slack channel
+    whatsapp: '' #id of the whatsapp group/chat
+    slack: '' #id of the slack channel
 
 contacts:
   key: #just a random key or so, could maybe be the name, repeat for every contact
