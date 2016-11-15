@@ -38,7 +38,7 @@ if not configuration:
 # Initialize defaults
 credentials = (str(configuration['config']['whatsapp']['number']), configuration['config']['whatsapp']['password'])
 sc = SlackClient(configuration['config']['slack']['key'])
-
+spamRateLimit = {}
 
 # Channel bridge layer for Yowsup
 class ChannelBridgeLayer(YowInterfaceLayer):
@@ -102,8 +102,17 @@ class ChannelBridgeLayer(YowInterfaceLayer):
                 print('Unsupported message type passed through: ' + messageProtocolEntity.getType())
 
         else:
-            self.sendMessage(messageProtocolEntity.getFrom(),
-                             'Are you tokking to me? Ik ken dit gesprek niet.. Bel Wouter even!')
+            if messageProtocolEntity.getFrom() in spamRateLimit:
+                spamRateLimit[messageProtocolEntity.getFrom()] -= 1
+
+                if spamRateLimit[messageProtocolEntity.getFrom()] <= 0:
+                    spamRateLimit[messageProtocolEntity.getFrom()] = 10
+            else:
+                spamRateLimit[messageProtocolEntity.getFrom()] = 10
+
+            if spamRateLimit[messageProtocolEntity.getFrom()] == 10:
+                self.sendMessage(messageProtocolEntity.getFrom(),
+                                 'Are you tokking to me? Ik ken dit gesprek niet.. Bel Wouter even!')
 
         self.toLower(messageProtocolEntity.ack())
         self.toLower(messageProtocolEntity.ack(True))
