@@ -56,7 +56,13 @@ class ChannelBridgeLayer(YowInterfaceLayer):
     def onMessage(self, messageProtocolEntity):
         postChannel = False
 
-        print(messageProtocolEntity)
+        print('Received WhatsApp message from ' + messageProtocolEntity.getAuthor(False)
+              + ' in chat ' + messageProtocolEntity.getFrom())
+
+        if messageProtocolEntity.getType() == 'text':
+            print('Message was "' + messageProtocolEntity.getBody() + '"')
+        else:
+            print('Message was of type ' + messageProtocolEntity.getType())
 
         for channel, config in configuration['channels'].items():
             if config['whatsapp'] == messageProtocolEntity.getFrom():
@@ -158,10 +164,20 @@ def slack():
                     messages = sc.rtm_read()
 
                     for message in messages:
-                        print(message)
 
                         if message['type'] == 'message':
                             postChannel = False
+
+                            if 'user' in message:
+                                print('Received Slack message from ' + message['user']
+                                      + ' in channel ' + message['channel'])
+                            else:
+                                print('Received Slack message from unknown in channel ' + message['channel'])
+
+                            if 'subtype' in message:
+                                print('Message was of subtype ' + message['subtype'])
+                            else:
+                                print('Message was "' + message['text'] + '"')
 
                             for channel, config in configuration['channels'].items():
                                 if config['slack'] == message['channel']:
