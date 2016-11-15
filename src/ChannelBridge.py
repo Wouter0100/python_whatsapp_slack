@@ -202,12 +202,21 @@ def slack():
                                 else:
                                     channelBridgeLayer.sendMessage(postChannel, prefix + ': ' + message['text'])
                             else:
-                                sc.api_call(
-                                    'chat.postMessage',
-                                    channel=message['channel'],
-                                    username='whatsapp',
-                                    text='Are you tokking to me? Ik ken dit gesprek niet.. Bel Wouter even!'
-                                )
+                                if message['channel'] in spamRateLimit:
+                                    spamRateLimit[message['channel']] -= 1
+
+                                    if spamRateLimit[message['channel']] <= 0:
+                                        spamRateLimit[message['channel']] = 10
+                                else:
+                                    spamRateLimit[message['channel']] = 10
+
+                                if spamRateLimit[message['channel']] == 10:
+                                    sc.api_call(
+                                        'chat.postMessage',
+                                        channel=message['channel'],
+                                        username='whatsapp',
+                                        text='Are you tokking to me? Ik ken dit gesprek niet.. Bel Wouter even!'
+                                    )
 
                     time.sleep(1)
             else:
