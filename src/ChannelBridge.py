@@ -43,17 +43,10 @@ sc = SlackClient(configuration['config']['slack']['key'])
 # Channel bridge layer for Yowsup
 class ChannelBridgeLayer(YowInterfaceLayer):
 
-    def onConnected(self, yowLayerEvent):
-        super().onConnected(yowLayerEvent)
-
-        def onSuccess(resultIqEntity, originalIqEntity):
-            print('Successfully set sttatus')
-
-        def onError(errorIqEntity, originalIqEntity):
-            print('Error while setting status')
-
+    @ProtocolEntityCallback("success")
+    def onSuccess(self, successProtocolEntity):
         entity = SetStatusIqProtocolEntity('- Connects WhatsApp and Slack -')
-        self._sendIq(entity, onSuccess, onError)
+        self._sendIq(entity)
 
     def sendMessage(self, to, content):
         outgoingMessage = TextMessageProtocolEntity(content, to=to)
