@@ -97,13 +97,11 @@ class ChannelBridgeLayer(YowInterfaceLayer):
                 )
             elif messageProtocolEntity.getType() == 'media':
                 if messageProtocolEntity.getMediaType() == "image":
-                    file = sc.api_call(
+                    sc.api_call(
                         'files.upload',
                         channels=postChannel,
                         file=io.BytesIO(messageProtocolEntity.getMediaContent())
                     )
-
-                    print(file)
                 else:
                     print('Unsupported message media type passed through: ' + messageProtocolEntity.getType())
             else:
