@@ -56,6 +56,8 @@ class ChannelBridgeLayer(YowInterfaceLayer):
     def onMessage(self, messageProtocolEntity):
         postChannel = False
 
+        print(messageProtocolEntity)
+
         for channel, config in configuration['channels'].items():
             if config['whatsapp'] == messageProtocolEntity.getFrom():
                 postChannel = config['slack']
