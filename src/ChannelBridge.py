@@ -2,6 +2,8 @@ import io
 from threading import Thread
 
 import time
+
+import emoji as emoji
 import yaml
 from yaml.scanner import ScannerError
 
@@ -216,7 +218,9 @@ def slack():
                                     if message['subtype'] == 'file_share':
                                         channelBridgeLayer.sendMessage(postChannel, prefix + ' shared a file on Slack.')
                                 else:
-                                    channelBridgeLayer.sendMessage(postChannel, prefix + ': ' + message['text'])
+                                    channelBridgeLayer.sendMessage(postChannel,
+                                                                   prefix + ': ' + emoji.emojize(message['text'],
+                                                                                                 use_aliases=True))
                             else:
                                 if message['channel'] in spamRateLimit:
                                     spamRateLimit[message['channel']] -= 1
