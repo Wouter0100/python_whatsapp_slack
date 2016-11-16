@@ -62,7 +62,7 @@ class ChannelBridgeLayer(YowInterfaceLayer):
               + ' in chat ' + messageProtocolEntity.getFrom())
 
         if messageProtocolEntity.getType() == 'text':
-            print('Message was "' + messageProtocolEntity.getBody() + '"')
+            print('Message was "' + emoji.demojize(messageProtocolEntity.getBody()) + '"')
         else:
             print('Message was of type ' + messageProtocolEntity.getType())
 
