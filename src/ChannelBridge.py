@@ -208,8 +208,8 @@ def slack():
 
                             if prefix is None:
                                 continue
-							else:
-								prefix = '*' + prefix +'*'
+                            else:
+                                prefix = '*' + prefix +'*'
 
                             if 'subtype' in message:
                                 if message['subtype'] == 'file_share':
