@@ -135,114 +135,107 @@ channelBridgeLayer = ChannelBridgeLayer()
 
 def whatsapp():
     while True:
+
+        stackBuilder = YowStackBuilder()
+
+        stack = stackBuilder \
+            .pushDefaultLayers(True) \
+            .push(channelBridgeLayer) \
+            .build()
+
+        stack.setCredentials(credentials)
+        stack.broadcastEvent(YowLayerEvent(YowNetworkLayer.EVENT_STATE_CONNECT))
+
         try:
-
-            stackBuilder = YowStackBuilder()
-
-            stack = stackBuilder \
-                .pushDefaultLayers(True) \
-                .push(channelBridgeLayer) \
-                .build()
-
-            stack.setCredentials(credentials)
-            stack.broadcastEvent(YowLayerEvent(YowNetworkLayer.EVENT_STATE_CONNECT))
-
-            try:
-                stack.loop()
-            except AuthError as e:
-                print('Authentication Error: %s' % e.message)
-
-        except BaseException as e:
-            print(e)
+            stack.loop()
+        except AuthError as e:
+            print('Authentication Error: %s' % e.message)
 
 
 def slack():
     while True:
-        try:
-            if sc.rtm_connect():
-                while True:
-                    messages = sc.rtm_read()
+        if sc.rtm_connect():
+            while True:
+                messages = sc.rtm_read()
 
-                    for message in messages:
+                for message in messages:
 
-                        if message['type'] == 'message':
-                            postChannel = False
+                    if message['type'] == 'message':
+                        postChannel = False
+
+                        if 'user' in message:
+                            print('Received Slack message from ' + message['user']
+                                  + ' in channel ' + message['channel'])
+                        else:
+                            print('Received Slack message from unknown in channel ' + message['channel'])
+
+                        if 'subtype' in message:
+                            print('Message was of subtype ' + message['subtype'])
+                        else:
+                            print('Message was "' + message['text'] + '"')
+
+                        for channel, config in configuration['channels'].items():
+                            if config['slack'] == message['channel']:
+                                postChannel = config['whatsapp']
+                                break
+
+                        if postChannel:
+                            prefix = None
 
                             if 'user' in message:
-                                print('Received Slack message from ' + message['user']
-                                      + ' in channel ' + message['channel'])
-                            else:
-                                print('Received Slack message from unknown in channel ' + message['channel'])
+                                # Try to find user in contacts
+                                for contact, config in configuration['contacts'].items():
+                                    if 'slack' not in config:
+                                        continue
 
-                            if 'subtype' in message:
-                                print('Message was of subtype ' + message['subtype'])
-                            else:
-                                print('Message was "' + message['text'] + '"')
+                                    if str(config['slack']) == str(message['user']):
+                                        prefix = config['name']
 
-                            for channel, config in configuration['channels'].items():
-                                if config['slack'] == message['channel']:
-                                    postChannel = config['whatsapp']
-                                    break
-
-                            if postChannel:
-                                prefix = None
-
-                                if 'user' in message:
-                                    # Try to find user in contacts
-                                    for contact, config in configuration['contacts'].items():
-                                        if 'slack' not in config:
-                                            continue
-
-                                        if str(config['slack']) == str(message['user']):
-                                            prefix = config['name']
-
-                                    # Get firstname and lastname from Slack
-                                    if prefix is None:
-                                        user = sc.api_call(
-                                            'users.info',
-                                            user=message['user'],
-                                        )
-
-                                        if 'user' in user:
-                                            profile = user['user']['profile']
-                                            if 'firstname' in profile and 'last_name' in profile:
-                                                prefix = profile['real_name']
-
-                                            if 'username' in user['user']:
-                                                prefix = user['user']
-
+                                # Get firstname and lastname from Slack
                                 if prefix is None:
-                                    continue
-
-                                if 'subtype' in message:
-                                    if message['subtype'] == 'file_share':
-                                        channelBridgeLayer.sendMessage(postChannel, prefix + ' shared a file on Slack.')
-                                else:
-                                    channelBridgeLayer.sendMessage(postChannel,
-                                                                   prefix + ': ' + emoji.emojize(message['text'],
-                                                                                                 use_aliases=True))
-                            else:
-                                if message['channel'] in spamRateLimit:
-                                    spamRateLimit[message['channel']] -= 1
-
-                                    if spamRateLimit[message['channel']] <= 0:
-                                        spamRateLimit[message['channel']] = 10
-                                else:
-                                    spamRateLimit[message['channel']] = 10
-
-                                if spamRateLimit[message['channel']] == 10:
-                                    sc.api_call(
-                                        'chat.postMessage',
-                                        channel=message['channel'],
-                                        username='whatsapp',
-                                        text='Are you tokking to me? Ik ken dit gesprek niet.. Bel Wouter even!'
+                                    user = sc.api_call(
+                                        'users.info',
+                                        user=message['user'],
                                     )
 
-                    time.sleep(1)
-            else:
-                print('Connection Failed, invalid token?')
-        except BaseException as e:
-            print(e)
+                                    if 'user' in user:
+                                        profile = user['user']['profile']
+                                        if 'firstname' in profile and 'last_name' in profile:
+                                            prefix = profile['real_name']
+
+                                        if 'username' in user['user']:
+                                            prefix = user['user']
+
+                            if prefix is None:
+                                continue
+
+                            if 'subtype' in message:
+                                if message['subtype'] == 'file_share':
+                                    channelBridgeLayer.sendMessage(postChannel, prefix + ' shared a file on Slack.')
+                            else:
+                                channelBridgeLayer.sendMessage(postChannel,
+                                                               prefix + ': ' + emoji.emojize(message['text'],
+                                                                                             use_aliases=True))
+                        else:
+                            if message['channel'] in spamRateLimit:
+                                spamRateLimit[message['channel']] -= 1
+
+                                if spamRateLimit[message['channel']] <= 0:
+                                    spamRateLimit[message['channel']] = 10
+                            else:
+                                spamRateLimit[message['channel']] = 10
+
+                            if spamRateLimit[message['channel']] == 10:
+                                sc.api_call(
+                                    'chat.postMessage',
+                                    channel=message['channel'],
+                                    username='whatsapp',
+                                    text='Are you tokking to me? Ik ken dit gesprek niet.. Bel Wouter even!'
+                                )
+
+                time.sleep(1)
+        else:
+            print('Connection Failed, invalid token?')
 
 
 if __name__ == '__main__':
